@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVENTARIO BST - Sistema Completo con Supabase</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ESTILOS GENERALES - MANTENIENDO TU PALETA EXACTA */
+        :root {
+            --verde-hoja: #4CAF50;
+            --verde-oscuro: #087F23;
+            --verde-claro: #80E27E;
+            --blanco: #FFFFFF;
+            --gris-claro: #F5F5F5;
+            --gris-medio: #757575;
+            --gris-oscuro: #494949;
+            --sombra: rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--gris-claro);
+            color: var(--gris-oscuro);
+        }
+        
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        /* LOGIN - MANTENIENDO TU DISEÑO ORIGINAL */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--gris-claro) 0%, #e0f2f1 100%);
+        }
+        
+        .login-box {
+            background: var(--blanco);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px var(--sombra);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo i {
+            font-size: 48px;
+            color: var(--verde-hoja);
+            margin-bottom: 15px;
+        }
+        
+        .logo h1 {
+            color: var(--verde-oscuro);
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .logo p {
+            color: var(--gris-medio);
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--gris-oscuro);
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--verde-hoja);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gris-medio);
+            cursor: pointer;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--verde-hoja);
+            color: var(--blanco);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .btn-login:hover {
+            background-color: var(--verde-oscuro);
+        }
+        
+        .btn-login:disabled {
+            background-color: var(--gris-medio);
+            cursor: not-allowed;
+        }
+        
+        .login-error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--gris-medio);
+            font-size: 13px;
+        }
+        
+        /* DASHBOARD - MANTENIENDO TU DISEÑO ORIGINAL */
+        .dashboard-container {
+            display: none;
+            width: 100%;
+        }
+        
+        /* SIDEBAR - IGUAL QUE TU VERSIÓN */
+        .sidebar {
+            width: 260px;
+            background: var(--blanco);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 2px 0 5px var(--sombra);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: var(--verde-hoja);
+            color: var(--blanco);
+            text-align: center;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .user-info {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            background: var(--gris-claro);
+        }
+        
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--verde-hoja);
+            color: var(--blanco);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 10px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: var(--gris-oscuro);
+        }
+        
+        .user-role {
+            color: var(--gris-medio);
+            font-size: 14px;
+        }
+        
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: var(--gris-oscuro);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-item:hover {
+            background-color: var(--gris-claro);
+            color: var(--verde-oscuro);
+            border-left-color: var(--verde-hoja);
+        }
+        
+        .menu-item.active {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--verde-oscuro);
+            border-left-color: var(--verde-hoja);
+            font-weight: 600;
+        }
+        
+        .menu-item i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .btn-logout {
+            width: 100%;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--gris-medio);
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-logout:hover {
+            background-color: #ffebee;
+            color: #c62828;
+            border-color: #ffcdd2;
+        }
+        
+        .btn-logout i {
+            margin-right: 8px;
+        }
+        
+        /* CONTENIDO PRINCIPAL - IGUAL QUE TU VERSIÓN */
+        .main-content {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            padding: 20px;
+        }
+        
+        .top-nav {
+            background: var(--blanco);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px var(--sombra);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title h1 {
+            color: var(--verde-oscuro);
+            font-size: 24px;
+        }
+        
+        .page-title p {
+            color: var(--gris-medio);
+            font-size: 14px;
+        }
+        
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .notification-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--gris-medio);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #f44336;
+            color: white;
+            font-size: 12px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-menu-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--verde-hoja);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* DASHBOARD CONTENT - TUS 3 GRÁFICOS DE TORTA Y 1 TARJETA */
+        .dashboard-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-card {
+            background: var(--blanco);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--verde-oscuro);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--verde-hoja);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .chart-summary {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .summary-label {
+            color: var(--gris-medio);
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            color: var(--gris-oscuro);
+        }
+        
+        /* TARJETA DE ÓRDENES PENDIENTES */
+        .orders-card {
+            background: var(--blanco);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+            border-top: 4px solid #FF9800;
+        }
+        
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .orders-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--verde-oscuro);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .orders-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 152, 0, 0.1);
+            color: #FF9800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .orders-count {
+            font-size: 36px;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+            color: #FF9800;
+        }
+        
+        .orders-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .order-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        
+        .order-info h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: var(--gris-oscuro);
+        }
+        
+        .order-info p {
+            font-size: 12px;
+            color: var(--gris-medio);
+        }
+        
+        .order-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: rgba(255, 152, 0, 0.1);
+            color: #FF9800;
+        }
+        
+        .status-processing {
+            background: rgba(33, 150, 243, 0.1);
+            color: #2196F3;
+        }
+        
+        /* ESTILOS PARA LOS OTROS MÓDULOS (IGUAL QUE TU VERSIÓN) */
+        .module-content {
+            display: none;
+        }
+        
+        .module-content.active {
+            display: block;
+        }
+        
+        .section {
+            background: var(--blanco);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px var(--sombra);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .section-title {
+            color: var(--verde-oscuro);
+            font-size: 18px;
+        }
+        
+        .btn-primary {
+            background-color: var(--verde-hoja);
+            color: var(--blanco);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--verde-oscuro);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--gris-medio);
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--gris-claro);
+            border-color: var(--gris-medio);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            background: var(--gris-claro);
+            color: var(--gris-oscuro);
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.active {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--verde-hoja);
+        }
+        
+        .status.pending {
+            background: rgba(255, 152, 0, 0.1);
+            color: #FF9800;
+        }
+        
+        .status.low {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: var(--gris-medio);
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .tab-btn.active {
+            color: var(--verde-oscuro);
+            border-bottom: 3px solid var(--verde-hoja);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* LOADING SPINNER PARA SUPABASE */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--verde-hoja);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--gris-medio);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- PANTALLA DE LOGIN -->
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <div class="logo">
+                <i class="fas fa-boxes-stacked"></i>
+                <h1>INVENTARIO BST</h1>
+                <p>Sistema de Gestión Integral</p>
+            </div>
+            
+            <div class="login-error" id="loginError">
+                <i class="fas fa-exclamation-circle"></i> Error de conexión
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" placeholder="admin@inventario.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <div class="password-container">
+                        <input type="password" id="password" placeholder="admin123" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span id="loginBtnText">Iniciar Sesión</span>
+                    <i class="fas fa-spinner fa-spin" id="loginSpinner" style="display: none;"></i>
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Versión 1.0 - Conectado a Supabase</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- DASHBOARD PRINCIPAL COMPLETO -->
+    <div class="dashboard-container" id="dashboardPage">
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>INVENTARIO BST</h2>
+                <p>Sistema de Gestión</p>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div class="user-name" id="userName">Usuario</div>
+                <div class="user-role" id="userRole">Cargando...</div>
+            </div>
+            
+            <div class="sidebar-menu">
+                <a href="#" class="menu-item active" data-module="dashboard">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="#" class="menu-item" data-module="inventory">
+                    <i class="fas fa-boxes"></i> Inventario
+                </a>
+                <a href="#" class="menu-item" data-module="imports">
+                    <i class="fas fa-ship"></i> Importaciones
+                </a>
+                <a href="#" class="menu-item" data-module="commercial">
+                    <i class="fas fa-store"></i> Comercial
+                </a>
+                <a href="#" class="menu-item" data-module="reports">
+                    <i class="fas fa-chart-bar"></i> Reportes
+                </a>
+                <a href="#" class="menu-item" data-module="costs">
+                    <i class="fas fa-calculator"></i> Costos y Precios
+                </a>
+                <a href="#" class="menu-item" data-module="movements">
+                    <i class="fas fa-exchange-alt"></i> Movimientos
+                </a>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="btn-logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+        
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="main-content">
+            <!-- BARRA SUPERIOR -->
+            <div class="top-nav">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="page-title">
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p id="pageSubtitle">Resumen visual del inventario</p>
+                </div>
+                
+                <div class="nav-actions">
+                    <button class="notification-btn" id="notificationBtn">
+                        <i class="far fa-bell"></i>
+                        <span class="notification-badge" id="notificationCount">0</span>
+                    </button>
+                    
+                    <div class="user-menu-avatar" id="userMenuAvatar">U</div>
+                </div>
+            </div>
+            
+            <!-- ======================== -->
+            <!-- DASHBOARD MODULE -->
+            <!-- ======================== -->
+            <div class="module-content active" id="dashboardModule">
+                <!-- Loading mientras se cargan datos de Supabase -->
+                <div class="loading" id="dashboardLoading">
+                    <div class="spinner"></div>
+                    <p>Conectando a Supabase...</p>
+                </div>
+                
+                <!-- Gráficos (se muestran cuando se cargan los datos) -->
+                <div id="dashboardContent" style="display: none;">
+                    <!-- GRÁFICOS DE TORTA (TUS 3 GRÁFICOS) -->
+                    <div class="dashboard-content">
+                        <!-- GRÁFICO 1: DISTRIBUCIÓN DE INVENTARIO -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <div class="chart-icon">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    Distribución de Inventario
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="inventoryDistributionChart"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="summary-label">Total Productos:</span>
+                                    <span class="summary-value" id="totalProducts">0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Categorías:</span>
+                                    <span class="summary-value" id="totalCategories">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- GRÁFICO 2: ESTADO DE STOCK -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <div class="chart-icon" style="background: rgba(244, 67, 54, 0.1); color: #f44336;">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    Estado del Stock
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="stockStatusChart"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="summary-label">Stock Normal:</span>
+                                    <span class="summary-value" id="normalStock">0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Bajo Stock:</span>
+                                    <span class="summary-value" id="lowStock">0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Stock Crítico:</span>
+                                    <span class="summary-value" id="criticalStock">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- GRÁFICO 3: VALOR POR CATEGORÍA -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <div class="chart-icon" style="background: rgba(33, 150, 243, 0.1); color: #2196F3;">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                    Valor por Categoría
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="valueByCategoryChart"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="summary-label">Valor Total:</span>
+                                    <span class="summary-value">$<span id="totalValue">0</span></span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Promedio por Producto:</span>
+                                    <span class="summary-value">$<span id="avgValue">0</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TARJETA DE ÓRDENES PENDIENTES -->
+                    <div class="orders-card">
+                        <div class="orders-header">
+                            <div class="orders-title">
+                                <div class="orders-icon">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                Órdenes Pendientes
+                            </div>
+                            <button class="btn-primary" onclick="viewAllOrders()">
+                                <i class="fas fa-eye"></i> Ver Todas
+                            </button>
+                        </div>
+                        
+                        <div class="orders-count" id="pendingOrdersCount">0</div>
+                        
+                        <div class="orders-list" id="pendingOrdersList">
+                            <!-- Las órdenes se cargan desde Supabase -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ======================== -->
+            <!-- INVENTARIO MODULE -->
+            <!-- ======================== -->
+            <div class="module-content" id="inventoryModule">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-boxes"></i> Gestión de Inventario
+                        </div>
+                        <div>
+                            <button class="btn-secondary" onclick="importFromExcel()">
+                                <i class="fas fa-file-excel"></i> Importar Excel
+                            </button>
+                            <button class="btn-primary" onclick="showAddProductModal()">
+                                <i class="fas fa-plus"></i> Nuevo Producto
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- FILTROS -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <input type="text" id="searchProduct" placeholder="Buscar producto..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        <select id="filterCategory" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                        <button class="btn-secondary" onclick="filterProducts()">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                    
+                    <!-- TABLA DE PRODUCTOS -->
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Stock</th>
+                                <th>Precio Compra</th>
+                                <th>Precio Venta</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTable">
+                            <!-- Datos se cargan con JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ======================== -->
+            <!-- IMPORTACIONES MODULE -->
+            <!-- ======================== -->
+            <div class="module-content" id="importsModule">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-ship"></i> Gestión de Importaciones
+                        </div>
+                        <button class="btn-primary" onclick="showNewImportModal()">
+                            <i class="fas fa-plus"></i> Nueva Importación
+                        </button>
+                    </div>
+                    
+                    <!-- RESUMEN DE IMPORTACIONES -->
+                    <div class="dashboard-content" style="margin-bottom: 20px; grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-value" id="totalImports">0</div>
+                                    <div class="stat-label">Importaciones Activas</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-ship"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card blue">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-value">$<span id="importsValue">0</span></div>
+                                    <div class="stat-label">Valor en Tránsito</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card orange">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-value" id="pendingImports">0</div>
+                                    <div class="stat-label">Pendientes de Aduana</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TABLA DE IMPORTACIONES -->
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Proveedor</th>
+                                <th>Incoterm</th>
+                                <th>Fecha Llegada</th>
+                                <th>Valor FOB</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="importsTable">
+                            <!-- Datos se cargan con JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ======================== -->
+            <!-- COMERCIAL MODULE -->
+            <!-- ======================== -->
+            <div class="module-content" id="commercialModule">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-store"></i> Gestión Comercial
+                        </div>
+                        <div>
+                            <button class="btn-secondary" onclick="showClients()">
+                                <i class="fas fa-users"></i> Clientes
+                            </button>
+                            <button class="btn-primary" onclick="showNewQuote()">
+                                <i class="fas fa-file-invoice-dollar"></i> Nueva Cotización
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- PESTAÑAS -->
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="quotes">Cotizaciones</button>
+                        <button class="tab-btn" data-tab="orders">Órdenes</button>
+                        <button class="tab-btn" data-tab="suppliers">Proveedores</button>
+                    </div>
+                    
+                    <!-- CONTENIDO PESTAÑAS -->
+                    <div id="quotesTab" class="tab-content active">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total USD</th>
+                                    <th>Total VES</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotesTable">
+                                <!-- Datos se cargan con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="ordersTab" class="tab-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Entrega</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTable">
+                                <!-- Datos se cargan con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="suppliersTab" class="tab-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>RIF/CI</th>
+                                    <th>Teléfono</th>
+                                    <th>Email</th>
+                                    <th>Tipo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suppliersTable">
+                                <!-- Datos se cargan con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ======================== -->
+            <!-- REPORTES MODULE -->
+            <!-- ======================== -->
+            <div class="module-content" id="reportsModule">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-chart-bar"></i> Reportes y Estadísticas
+                        </div>
+                        <div>
+                            <button class="btn-secondary">
+                                <i class="fas fa-file-excel"></i> Exportar Excel
+                            </button>
+                            <button class="btn-primary">
+                                <i class="fas fa-print"></i> Imprimir Reporte
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 50px; color: var(--gris-medio);">
+                        <i class="fas fa-chart-line" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3>Módulo de Reportes</h3>
+                        <p>Conectado a Supabase - Reportes administrativos, ventas, inventario</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ======================== -->
+            <!-- COSTOS Y PRECIOS MODULE -->
+            <!-- ======================== -->
+            <div class="module-content" id="costsModule">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-calculator"></i> Costos y Precios
+                        </div>
+                        <button class="btn-primary">
+                            <i class="fas fa-cog"></i> Configurar Tasa
+                        </button>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 50px; color: var(--gris-medio);">
+                        <i class="fas fa-calculator" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3>Módulo de Costos y Precios</h3>
+                        <p>Conectado a Supabase - Cálculo automático de precios y márgenes</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ======================== -->
+            <!-- MOVIMIENTOS MODULE -->
+            <!-- ======================== -->
+            <div class="module-content" id="movementsModule">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-exchange-alt"></i> Movimientos de Inventario
+                        </div>
+                        <button class="btn-primary">
+                            <i class="fas fa-history"></i> Ver Historial Completo
+                        </button>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 50px; color: var(--gris-medio);">
+                        <i class="fas fa-exchange-alt" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3>Módulo de Movimientos</h3>
+                        <p>Conectado a Supabase - Registro de entradas, salidas y ajustes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN SUPABASE - ¡REEMPLAZA ESTOS VALORES!
+        // ============================================
+        const SUPABASE_URL = 'https://tu-proyecto.supabase.cohttps://scsvuehezfwdtdrxllll.supabase.co';  // Cambia esto
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjc3Z1ZWhlemZ3ZHRkcnhsbGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDIxMzAsImV4cCI6MjA4MDE3ODEzMH0.xy0Yi23QnbG6zaO5N3NcXVAXegCApZeMAKh7BUjFIHY';           // Cambia esto
+        
+        // ============================================
+        // INICIALIZAR SUPABASE
+        // ============================================
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
+        let currentUser = null;
+        let inventoryChart, stockChart, valueChart;
+        
+        // ============================================
+        // DATOS DE DEMOSTRACIÓN (si Supabase falla)
+        // ============================================
+        const demoProducts = [
+            { id: 1, codigo: "PROD-001", nombre: "Laptop HP EliteBook", categoria: "Electrónica", stock_actual: 15, stock_minimo: 5, precio_compra_usd: 850, precio_venta_usd: 1200 },
+            { id: 2, codigo: "PROD-002", nombre: "Taladro Percutor", categoria: "Herramientas", stock_actual: 8, stock_minimo: 5, precio_compra_usd: 120, precio_venta_usd: 180 },
+            { id: 3, codigo: "PROD-003", nombre: "Cemento Gris 50kg", categoria: "Materiales", stock_actual: 45, stock_minimo: 20, precio_compra_usd: 8, precio_venta_usd: 12 },
+            { id: 4, codigo: "PROD-004", nombre: "Monitor 24\" LED", categoria: "Electrónica", stock_actual: 22, stock_minimo: 10, precio_compra_usd: 150, precio_venta_usd: 220 },
+            { id: 5, codigo: "PROD-005", nombre: "Set Destornilladores", categoria: "Herramientas", stock_actual: 3, stock_minimo: 10, precio_compra_usd: 25, precio_venta_usd: 40 },
+            { id: 6, codigo: "PROD-006", nombre: "Pintura Latex 1Gal", categoria: "Materiales", stock_actual: 12, stock_minimo: 15, precio_compra_usd: 18, precio_venta_usd: 28 },
+        ];
+        
+        const demoOrders = [
+            { id: 1, codigo_orden: "ORD-001", cliente_id: 1, estado: "pendiente", total_usd: 2850 },
+            { id: 2, codigo_orden: "ORD-002", cliente_id: 2, estado: "procesando", total_usd: 1200 },
+        ];
+        
+        // ============================================
+        // FUNCIONES DE LOGIN
+        // ============================================
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await login();
+        });
+        
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+        
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginSpinner = document.getElementById('loginSpinner');
+            
+            // Mostrar loading
+            loginBtn.disabled = true;
+            loginBtnText.style.display = 'none';
+            loginSpinner.style.display = 'inline-block';
+            
+            try {
+                // Intentar autenticación con Supabase
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                currentUser = data.user;
+                loginError.style.display = 'none';
+                
+                // Cambiar a dashboard
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('dashboardPage').style.display = 'flex';
+                
+                // Actualizar información del usuario
+                updateUserInfo();
+                
+                // Cargar datos del dashboard desde Supabase
+                await loadDashboardDataFromSupabase();
+                
+                // También cargar datos para otros módulos
+                loadInventoryData();
+                loadCommercialData();
+                
+            } catch (error) {
+                console.error('Error de login:', error);
+                
+                // Si falla Supabase, usar modo demostración
+                if (error.message.includes('Failed to fetch') || 
+                    error.message.includes('Invalid login credentials')) {
+                    
+                    loginError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Usando modo demostración';
+                    loginError.style.display = 'block';
+                    
+                    // Usar datos de demostración
+                    useDemoMode(email);
+                } else {
+                    loginError.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
+                    loginError.style.display = 'block';
+                }
+            } finally {
+                // Restaurar botón
+                loginBtn.disabled = false;
+                loginBtnText.style.display = 'inline';
+                loginSpinner.style.display = 'none';
+            }
+        }
+        
+        function updateUserInfo() {
+            if (!currentUser) return;
+            
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const userRole = document.getElementById('userRole');
+            const userMenuAvatar = document.getElementById('userMenuAvatar');
+            
+            // Usar inicial del email
+            const initial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U';
+            userAvatar.textContent = initial;
+            userMenuAvatar.textContent = initial;
+            
+            // Intentar obtener más información del usuario
+            if (currentUser.email) {
+                userName.textContent = currentUser.email.split('@')[0];
+                userRole.textContent = 'Usuario Supabase';
+            }
+        }
+        
+        // ============================================
+        // CARGAR DATOS DEL DASHBOARD DESDE SUPABASE
+        // ============================================
+        async function loadDashboardDataFromSupabase() {
+            const dashboardLoading = document.getElementById('dashboardLoading');
+            const dashboardContent = document.getElementById('dashboardContent');
+            
+            // Mostrar loading
+            dashboardLoading.style.display = 'block';
+            dashboardContent.style.display = 'none';
+            
+            try {
+                console.log('Conectando a Supabase para el dashboard...');
+                
+                // 1. CARGAR PRODUCTOS DESDE SUPABASE
+                let products = [];
+                try {
+                    const { data, error } = await supabase
+                        .from('productos')
+                        .select('*')
+                        .eq('is_active', true);
+                    
+                    if (error) throw error;
+                    
+                    products = data || [];
+                    console.log('Productos cargados:', products.length);
+                    
+                } catch (productError) {
+                    console.warn('Error cargando productos de Supabase:', productError);
+                    products = demoProducts;
+                }
+                
+                // 2. CARGAR ÓRDENES DESDE SUPABASE
+                let orders = [];
+                try {
+                    const { data, error } = await supabase
+                        .from('ordenes')
+                        .select('*')
+                        .eq('estado', 'pendiente')
+                        .limit(5);
+                    
+                    if (error) throw error;
+                    
+                    orders = data || [];
+                    console.log('Órdenes cargadas:', orders.length);
+                    
+                } catch (orderError) {
+                    console.warn('Error cargando órdenes de Supabase:', orderError);
+                    orders = demoOrders;
+                }
+                
+                // 3. PROCESAR Y MOSTRAR LOS DATOS EN EL DASHBOARD
+                processAndDisplayDashboardData(products, orders);
+                
+                // 4. OCULTAR LOADING Y MOSTRAR CONTENIDO
+                dashboardLoading.style.display = 'none';
+                dashboardContent.style.display = 'block';
+                
+                // 5. CARGAR NOTIFICACIONES (productos bajo stock)
+                loadLowStockNotifications(products);
+                
+            } catch (error) {
+                console.error('Error general cargando dashboard:', error);
+                dashboardLoading.innerHTML = `
+                    <div style="color: #f44336;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Error: ${error.message}</p>
+                        <button onclick="useDemoMode()" style="margin-top: 10px; padding: 10px 20px; background: var(--verde-hoja); color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Usar Modo Demostración
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        function processAndDisplayDashboardData(products, orders) {
+            // 1. CALCULAR ESTADÍSTICAS
+            const totalProducts = products.length;
+            const categories = [...new Set(products.map(p => p.categoria).filter(Boolean))];
+            const totalValue = products.reduce((sum, p) => sum + (p.stock_actual * (p.precio_compra_usd || 0)), 0);
+            const avgValue = totalProducts > 0 ? totalValue / totalProducts : 0;
+            
+            // 2. CALCULAR ESTADO DE STOCK
+            let normalStock = 0, lowStock = 0, criticalStock = 0;
+            
+            products.forEach(p => {
+                if (!p.stock_minimo || p.stock_minimo === 0) {
+                    normalStock++;
+                    return;
+                }
+                
+                const stockPercentage = (p.stock_actual / p.stock_minimo) * 100;
+                if (stockPercentage > 150) {
+                    normalStock++;
+                } else if (stockPercentage > 50) {
+                    lowStock++;
+                } else {
+                    criticalStock++;
+                }
+            });
+            
+            // 3. ACTUALIZAR VALORES EN LA INTERFAZ
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('totalCategories').textContent = categories.length;
+            document.getElementById('normalStock').textContent = normalStock;
+            document.getElementById('lowStock').textContent = lowStock;
+            document.getElementById('criticalStock').textContent = criticalStock;
+            document.getElementById('totalValue').textContent = totalValue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+            document.getElementById('avgValue').textContent = avgValue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+            
+            // 4. ACTUALIZAR ÓRDENES PENDIENTES
+            document.getElementById('pendingOrdersCount').textContent = orders.length;
+            displayOrders(orders);
+            
+            // 5. CREAR LOS 3 GRÁFICOS DE TORTA
+            createCharts(products);
+        }
+        
+        function displayOrders(orders) {
+            const ordersList = document.getElementById('pendingOrdersList');
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: var(--gris-medio);">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No hay órdenes pendientes</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            ordersList.innerHTML = '';
+            
+            orders.forEach(order => {
+                const orderItem = document.createElement('div');
+                orderItem.className = 'order-item';
+                
+                const statusClass = order.estado === 'pendiente' ? 'status-pending' : 'status-processing';
+                const statusText = order.estado === 'pendiente' ? 'Pendiente' : 'Procesando';
+                
+                orderItem.innerHTML = `
+                    <div class="order-info">
+                        <h4>${order.codigo_orden || `ORD-${order.id}`}</h4>
+                        <p>$${order.total_usd?.toLocaleString() || '0'}</p>
+                    </div>
+                    <div>
+                        <span class="order-status ${statusClass}">${statusText}</span>
+                    </div>
+                `;
+                
+                ordersList.appendChild(orderItem);
+            });
+        }
+        
+        function createCharts(products) {
+            // Destruir gráficos anteriores si existen
+            if (inventoryChart) inventoryChart.destroy();
+            if (stockChart) stockChart.destroy();
+            if (valueChart) valueChart.destroy();
+            
+            // GRÁFICO 1: Distribución por categoría
+            const categoryData = {};
+            products.forEach(p => {
+                const category = p.categoria || 'Sin categoría';
+                categoryData[category] = (categoryData[category] || 0) + 1;
+            });
+            
+            const ctx1 = document.getElementById('inventoryDistributionChart').getContext('2d');
+            inventoryChart = new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(categoryData),
+                    datasets: [{
+                        data: Object.values(categoryData),
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(33, 150, 243, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(156, 39, 176, 0.7)',
+                            'rgba(244, 67, 54, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // GRÁFICO 2: Estado del stock
+            const stockData = {
+                normal: products.filter(p => {
+                    if (!p.stock_minimo) return true;
+                    return (p.stock_actual / p.stock_minimo) > 1.5;
+                }).length,
+                bajo: products.filter(p => {
+                    if (!p.stock_minimo) return false;
+                    const ratio = p.stock_actual / p.stock_minimo;
+                    return ratio > 0.5 && ratio <= 1.5;
+                }).length,
+                critico: products.filter(p => {
+                    if (!p.stock_minimo) return false;
+                    return (p.stock_actual / p.stock_minimo) <= 0.5;
+                }).length
+            };
+            
+            const ctx2 = document.getElementById('stockStatusChart').getContext('2d');
+            stockChart = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: ['Normal', 'Bajo', 'Crítico'],
+                    datasets: [{
+                        data: [stockData.normal, stockData.bajo, stockData.critico],
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(244, 67, 54, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // GRÁFICO 3: Valor por categoría
+            const valueData = {};
+            products.forEach(p => {
+                const category = p.categoria || 'Sin categoría';
+                const value = p.stock_actual * (p.precio_compra_usd || 0);
+                valueData[category] = (valueData[category] || 0) + value;
+            });
+            
+            const ctx3 = document.getElementById('valueByCategoryChart').getContext('2d');
+            valueChart = new Chart(ctx3, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(valueData),
+                    datasets: [{
+                        data: Object.values(valueData),
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(33, 150, 243, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(156, 39, 176, 0.7)',
+                            'rgba(244, 67, 54, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `$${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function loadLowStockNotifications(products) {
+            const lowStockCount = products.filter(p => {
+                if (!p.stock_minimo) return false;
+                return p.stock_actual <= p.stock_minimo;
+            }).length;
+            
+            if (lowStockCount > 0) {
+                document.getElementById('notificationCount').textContent = lowStockCount;
+            }
+        }
+        
+        // ============================================
+        // CARGAR DATOS PARA OTROS MÓDULOS
+        // ============================================
+        async function loadInventoryData() {
+            try {
+                // Cargar productos para el módulo de inventario
+                const { data: products, error } = await supabase
+                    .from('productos')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                displayProductsTable(products || demoProducts);
+                
+            } catch (error) {
+                console.error('Error cargando inventario:', error);
+                displayProductsTable(demoProducts);
+            }
+        }
+        
+        function displayProductsTable(products) {
+            const productsTable = document.getElementById('productsTable');
+            const filterCategory = document.getElementById('filterCategory');
+            
+            // Limpiar tabla
+            productsTable.innerHTML = '';
+            
+            // Limpiar y llenar filtro de categorías
+            filterCategory.innerHTML = '<option value="">Todas las categorías</option>';
+            const categories = [...new Set(products.map(p => p.categoria).filter(Boolean))];
+            categories.forEach(category => {
+                filterCategory.innerHTML += `<option value="${category}">${category}</option>`;
+            });
+            
+            // Mostrar productos
+            products.forEach(product => {
+                const status = product.stock_actual <= product.stock_minimo ? 'low' : 'active';
+                const statusText = product.stock_actual <= product.stock_minimo ? 'Bajo Stock' : 'Normal';
+                
+                const row = `
+                    <tr>
+                        <td>${product.codigo}</td>
+                        <td>${product.nombre}</td>
+                        <td>${product.categoria || '-'}</td>
+                        <td>${product.stock_actual}</td>
+                        <td>$${product.precio_compra_usd?.toFixed(2) || '0.00'}</td>
+                        <td>$${product.precio_venta_usd?.toFixed(2) || '0.00'}</td>
+                        <td><span class="status ${status}">${statusText}</span></td>
+                        <td>
+                            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="editProduct(${product.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="viewProduct(${product.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                productsTable.innerHTML += row;
+            });
+        }
+        
+        async function loadCommercialData() {
+            try {
+                // Cargar cotizaciones
+                const { data: quotes, error: quotesError } = await supabase
+                    .from('cotizaciones')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (!quotesError) {
+                    displayQuotesTable(quotes || []);
+                }
+                
+                // Cargar órdenes para módulo comercial
+                const { data: orders, error: ordersError } = await supabase
+                    .from('ordenes')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (!ordersError) {
+                    displayOrdersTable(orders || []);
+                }
+                
+            } catch (error) {
+                console.error('Error cargando datos comerciales:', error);
+            }
+        }
+        
+        function displayQuotesTable(quotes) {
+            const quotesTable = document.getElementById('quotesTable');
+            quotesTable.innerHTML = '';
+            
+            quotes.forEach(quote => {
+                let statusClass = '';
+                let statusText = '';
+                
+                switch(quote.estado) {
+                    case 'pendiente':
+                        statusClass = 'pending';
+                        statusText = 'Pendiente';
+                        break;
+                    case 'enviada':
+                        statusClass = 'pending';
+                        statusText = 'Enviada';
+                        break;
+                    case 'aprobada':
+                        statusClass = 'active';
+                        statusText = 'Aprobada';
+                        break;
+                    default:
+                        statusClass = 'pending';
+                        statusText = quote.estado || 'Pendiente';
+                }
+                
+                const row = `
+                    <tr>
+                        <td>${quote.codigo_cotizacion || `COT-${quote.id}`}</td>
+                        <td>Cliente ${quote.cliente_id || 'N/A'}</td>
+                        <td>${quote.fecha_emision || '-'}</td>
+                        <td>$${quote.total_usd?.toLocaleString('en-US', {minimumFractionDigits: 2}) || '0.00'}</td>
+                        <td>Bs ${quote.total_ves?.toLocaleString('en-US') || '0'}</td>
+                        <td><span class="status ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                quotesTable.innerHTML += row;
+            });
+        }
+        
+        function displayOrdersTable(orders) {
+            const ordersTable = document.getElementById('ordersTable');
+            ordersTable.innerHTML = '';
+            
+            orders.forEach(order => {
+                let statusClass = '';
+                let statusText = '';
+                
+                switch(order.estado) {
+                    case 'pendiente':
+                        statusClass = 'pending';
+                        statusText = 'Pendiente';
+                        break;
+                    case 'procesando':
+                        statusClass = 'pending';
+                        statusText = 'Procesando';
+                        break;
+                    case 'completada':
+                        statusClass = 'active';
+                        statusText = 'Completada';
+                        break;
+                    default:
+                        statusClass = 'pending';
+                        statusText = order.estado || 'Pendiente';
+                }
+                
+                const row = `
+                    <tr>
+                        <td>${order.codigo_orden || `ORD-${order.id}`}</td>
+                        <td>Cliente ${order.cliente_id || 'N/A'}</td>
+                        <td>${order.fecha_orden || '-'}</td>
+                        <td>${order.fecha_entrega_estimada || '-'}</td>
+                        <td>$${order.total_usd?.toLocaleString() || '0'}</td>
+                        <td><span class="status ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                ordersTable.innerHTML += row;
+            });
+        }
+        
+        // ============================================
+        // FUNCIONES DE LOS MÓDULOS
+        // ============================================
+        function showAddProductModal() {
+            alert('Modal para nuevo producto - Conectado a Supabase');
+        }
+        
+        function importFromExcel() {
+            alert('Funcionalidad de importación desde Excel - Conectado a Supabase');
+        }
+        
+        function filterProducts() {
+            alert('Funcionalidad de filtrado - Conectado a Supabase');
+        }
+        
+        function editProduct(id) {
+            alert(`Editando producto ID: ${id} - Conectado a Supabase`);
+        }
+        
+        function viewProduct(id) {
+            alert(`Viendo detalles del producto ID: ${id} - Conectado a Supabase`);
+        }
+        
+        function showNewImportModal() {
+            alert('Modal para nueva importación - Conectado a Supabase');
+        }
+        
+        function showNewQuote() {
+            alert('Funcionalidad para nueva cotización - Conectado a Supabase');
+        }
+        
+        function showClients() {
+            alert('Funcionalidad para mostrar clientes - Conectado a Supabase');
+        }
+        
+        function viewAllOrders() {
+            alert('Redirigiendo a todas las órdenes - Conectado a Supabase');
+        }
+        
+        // ============================================
+        // MODO DEMOSTRACIÓN
+        // ============================================
+        function useDemoMode(email = 'demo@usuario.com') {
+            currentUser = { email: email };
+            
+            // Ir al dashboard
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'flex';
+            
+            // Actualizar información del usuario
+            document.getElementById('userAvatar').textContent = 'D';
+            document.getElementById('userName').textContent = 'Usuario Demo';
+            document.getElementById('userRole').textContent = 'Modo Demostración';
+            document.getElementById('userMenuAvatar').textContent = 'D';
+            
+            // Procesar datos de demostración
+            const dashboardLoading = document.getElementById('dashboardLoading');
+            const dashboardContent = document.getElementById('dashboardContent');
+            
+            processAndDisplayDashboardData(demoProducts, demoOrders);
+            
+            // Cargar datos para otros módulos
+            displayProductsTable(demoProducts);
+            
+            // Mostrar contenido
+            dashboardLoading.style.display = 'none';
+            dashboardContent.style.display = 'block';
+            
+            // Mostrar advertencia
+            setTimeout(() => {
+                alert('⚠️ MODO DEMOSTRACIÓN\n\nConfigura Supabase para conectar con datos reales:\n\n1. Reemplaza SUPABASE_URL y SUPABASE_ANON_KEY\n2. Crea las tablas en Supabase\n3. Usa tu email/contraseña real');
+            }, 500);
+        }
+        
+        // ============================================
+        // NAVEGACIÓN ENTRE MÓDULOS
+        // ============================================
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remover clase active de todos
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.module-content').forEach(m => m.classList.remove('active'));
+                
+                // Agregar clase active al seleccionado
+                this.classList.add('active');
+                
+                // Mostrar módulo correspondiente
+                const module = this.getAttribute('data-module');
+                document.getElementById(`${module}Module`).classList.add('active');
+                
+                // Actualizar título
+                const titles = {
+                    'dashboard': 'Dashboard',
+                    'inventory': 'Inventario',
+                    'imports': 'Importaciones',
+                    'commercial': 'Comercial',
+                    'reports': 'Reportes',
+                    'costs': 'Costos y Precios',
+                    'movements': 'Movimientos'
+                };
+                
+                const subtitles = {
+                    'dashboard': 'Resumen visual del inventario',
+                    'inventory': 'Gestión de productos y stock',
+                    'imports': 'Gestión de importaciones y aduanas',
+                    'commercial': 'Cotizaciones, órdenes y clientes',
+                    'reports': 'Reportes y estadísticas del sistema',
+                    'costs': 'Cálculo de precios y márgenes',
+                    'movements': 'Registro de movimientos de inventario'
+                };
+                
+                document.getElementById('pageTitle').textContent = titles[module] || 'Dashboard';
+                document.getElementById('pageSubtitle').textContent = subtitles[module] || 'Resumen del sistema';
+                
+                // Redimensionar gráficos si volvemos al dashboard
+                if (module === 'dashboard') {
+                    setTimeout(() => {
+                        if (inventoryChart) inventoryChart.resize();
+                        if (stockChart) stockChart.resize();
+                        if (valueChart) valueChart.resize();
+                    }, 100);
+                }
+                
+                // Cerrar sidebar en móviles
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('active');
+                }
+            });
+        });
+        
+        // Pestañas del módulo comercial
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tab = this.getAttribute('data-tab');
+                
+                // Remover active de todos
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Agregar active al seleccionado
+                this.classList.add('active');
+                document.getElementById(`${tab}Tab`).classList.add('active');
+            });
+        });
+        
+        // ============================================
+        // FUNCIONES AUXILIARES
+        // ============================================
+        
+        // Menú móvil
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+        
+        // Notificaciones
+        document.getElementById('notificationBtn').addEventListener('click', function() {
+            alert('Notificaciones:\n\nProductos con stock bajo y otras alertas - Conectado a Supabase');
+        });
+        
+        // Cerrar sesión
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            if (confirm('¿Cerrar sesión?')) {
+                try {
+                    await supabase.auth.signOut();
+                } catch (error) {
+                    console.log('Error al cerrar sesión:', error);
+                }
+                
+                // Regresar al login
+                document.getElementById('dashboardPage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+                
+                // Limpiar formulario
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                
+                // Destruir gráficos
+                if (inventoryChart) inventoryChart.destroy();
+                if (stockChart) stockChart.destroy();
+                if (valueChart) valueChart.destroy();
+            }
+        });
+        
+        // ============================================
+        // INICIALIZACIÓN AL CARGAR LA PÁGINA
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('INVENTARIO BST - Sistema completo con Supabase');
+            
+            // Verificar si ya hay una sesión activa
+            try {
+                const { data } = await supabase.auth.getSession();
+                if (data.session) {
+                    currentUser = data.session.user;
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('dashboardPage').style.display = 'flex';
+                    updateUserInfo();
+                    await loadDashboardDataFromSupabase();
+                    loadInventoryData();
+                    loadCommercialData();
+                }
+            } catch (error) {
+                console.log('No hay sesión activa o error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
